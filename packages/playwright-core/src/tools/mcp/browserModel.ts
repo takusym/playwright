@@ -211,6 +211,15 @@ export class BrowserModel {
     });
   }
 
+  // A sessionId for any attached tab. Browser-level cookie reads (Storage.getCookies,
+  // which Playwright's context.cookies() sends with no sessionId) have no browser target
+  // over the extension debugger, so the relay answers them on a page session instead;
+  // cookies are shared across the context's tabs.
+  anyAttachedSessionId(): string | undefined {
+    const first = this._tabSessions.values().next().value as TabSession | undefined;
+    return first?.sessionId;
+  }
+
   private _findTabSession(predicate: (session: TabSession) => boolean): TabSession | undefined {
     for (const session of this._tabSessions.values()) {
       if (predicate(session))

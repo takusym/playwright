@@ -101,6 +101,16 @@ export class ExtensionProtocolV2 implements ExtensionProtocolHandler {
         return { result: await this._model.closeTarget(params?.targetId) };
       case 'Target.getTargetInfo':
         return { result: this._model.getTargetInfo(sessionId) };
+      case 'Storage.getCookies': {
+        // Browser-level read (context.cookies()): the extension debugger has no browser
+        // target, so route it to a page session, which returns the context-wide jar.
+        if (sessionId)
+          return undefined;
+        const tabSessionId = this._model.anyAttachedSessionId();
+        if (!tabSessionId)
+          return undefined;
+        return { result: await this._model.sendCommand(tabSessionId, 'Storage.getCookies', params) };
+      }
     }
     return undefined;
   }
